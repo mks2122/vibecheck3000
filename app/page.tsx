@@ -11,7 +11,7 @@ export default function Home() {
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-6xl font-extrabold text-white drop-shadow-md mb-2 flex items-center justify-center gap-2">
             <SparklesIcon className="h-8 w-8 md:h-12 md:w-12" />
-            <span>VibeCheck 3000</span>
+            <span>VibeCheck 30<button>0</button>0</span>
             <SparklesIcon className="h-8 w-8 md:h-12 md:w-12" />
           </h1>
           <p className="text-white/90 text-lg md:text-xl">Explore, express, and share your chaotic energy</p>

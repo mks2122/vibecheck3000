@@ -8,86 +8,9 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
 import { Copy, Share2 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { queryLLM } from "@/lib/llmUtil"
 
 type TranslationMode = "genz" | "meme" | "rizz" | "corporate"
-
-const TRANSLATIONS: Record<TranslationMode, (text: string) => string> = {
-  genz: (text) => {
-    const genzPhrases = [
-      "no cap",
-      "fr fr",
-      "bussin",
-      "slay",
-      "vibes",
-      "main character energy",
-      "living rent free",
-      "understood the assignment",
-      "it's giving",
-      "based",
-    ]
-    const emojis = ["💀", "😭", "🔥", "✨", "👁️👄👁️", "🤌", "🥺", "💅", "😤", "🙏"]
-
-    // Simplistic transformation for demo purposes
-    let result = text
-      .toLowerCase()
-      .replace(/working/g, "grinding")
-      .replace(/tired/g, "dead")
-      .replace(/good/g, "bussin")
-      .replace(/happy/g, "living my best life")
-      .replace(/sad/g, "not the vibe")
-
-    // Add random Gen Z phrase
-    const randomPhrase = genzPhrases[Math.floor(Math.random() * genzPhrases.length)]
-    result += ` ${randomPhrase}`
-
-    // Add random emojis
-    const numEmojis = 1 + Math.floor(Math.random() * 3)
-    for (let i = 0; i < numEmojis; i++) {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-      result += ` ${emoji}`
-    }
-
-    return result
-  },
-
-  meme: (text) => {
-    const memeFormats = [
-      `nobody:\nme: ${text}`,
-      `*${text}*\n[everyone liked that]`,
-      `when you ${text.toLowerCase()}\n*confused screaming*`,
-      `${text}\nbottom text`,
-      `me, an intellectual: ${text}`,
-    ]
-
-    return memeFormats[Math.floor(Math.random() * memeFormats.length)]
-  },
-
-  rizz: (text) => {
-    const rizzPhrases = [
-      "are you a parking ticket? because you've got FINE written all over you",
-      "must be a museum, because you're a work of art",
-      "did it hurt when you fell from the vending machine? cause you're a snack",
-      "are you made of copper and tellurium? Because you're Cu-Te",
-      "are you from Tennessee? Because you're the only 10 I see",
-    ]
-
-    const randomRizz = rizzPhrases[Math.floor(Math.random() * rizzPhrases.length)]
-    return `${text}... speaking of which, ${randomRizz} 😏✨`
-  },
-
-  corporate: (text) => {
-    // Corporate to cursed
-    const cursedCorporate = [
-      "per my last email, the souls of the damned cry out for release",
-      "circling back on our synergy opportunities in the void",
-      "let's take this offline and into the eternal abyss",
-      "just touching base from the shadow realm",
-      "we need to leverage our core competencies in existential dread",
-    ]
-
-    return `RE: ${text}\n\nAs discussed in our meeting,\n${cursedCorporate[Math.floor(Math.random() * cursedCorporate.length)]}\n\nBest,\nManagement 👹`
-  },
-}
 
 const MODE_LABELS: Record<TranslationMode, string> = {
   genz: "Gen Z Speak",
@@ -96,17 +19,35 @@ const MODE_LABELS: Record<TranslationMode, string> = {
   corporate: "Corporate-to-Cursed",
 }
 
+const MODE_INSTRUCTIONS: Record<TranslationMode, string> = {
+  genz: "Rewrite the following text in Gen Z speak, using slang, abbreviations, and emojis.just give me a single answer without any explanation and anyother unnecessary texts.",
+  meme: "Transform the following text into a meme format, using popular meme templates.just give me a single answer without any explanation and anyother unnecessary texts.",
+  rizz: "Add a flirty 'rizz' twist to the following text, with playful pickup lines.just give me a single answer without any explanation and anyother unnecessary texts.",
+  corporate: "Rewrite the following text as a corporate email with a darkly humorous or cursed tone.just give me a single answer without any explanation and anyother unnecessary texts.",
+}
+
 export function VibeTranslator() {
   const [inputText, setInputText] = useState("")
   const [mode, setMode] = useState<TranslationMode>("genz")
   const [result, setResult] = useState("")
   const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleTranslate = () => {
+  const handleTranslate = async () => {
     if (!inputText.trim()) return
 
-    const translatedText = TRANSLATIONS[mode](inputText)
-    setResult(translatedText)
+    setLoading(true)
+    try {
+      const systemInstruction = MODE_INSTRUCTIONS[mode]
+      const userPrompt = `Translate the following text in '${mode}' mode:\n\n${inputText}`
+      const translated = await queryLLM(systemInstruction, userPrompt)
+      setResult(translated)
+    } catch (error) {
+      console.error(error)
+      setResult("Something went wrong while translating 😢")
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleCopy = () => {
@@ -119,7 +60,7 @@ export function VibeTranslator() {
     <div className="flex flex-col">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-white mb-2">Vibe Translator</h2>
-        <p className="text-white/80">Transform your boring text into chaotic vibes</p>
+        <p className="text-white/80">Transform your boring text into chaotic vibes (AI powered)</p>
       </div>
 
       <div className="space-y-4">
@@ -151,9 +92,9 @@ export function VibeTranslator() {
         <Button
           onClick={handleTranslate}
           className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
-          disabled={!inputText.trim()}
+          disabled={!inputText.trim() || loading}
         >
-          Translate My Vibe
+          {loading ? "Translating..." : "Translate My Vibe"}
         </Button>
 
         {result && (
