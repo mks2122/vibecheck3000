@@ -11,17 +11,17 @@ export default function Home() {
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-6xl font-extrabold text-white drop-shadow-md mb-2 flex items-center justify-center gap-2">
             <SparklesIcon className="h-8 w-8 md:h-12 md:w-12" />
-            <span>VibeCheck 30<button>0</button>0</span>
+            <span>VibeCheck 3000</span>
             <SparklesIcon className="h-8 w-8 md:h-12 md:w-12" />
           </h1>
-          <p className="text-white/90 text-lg md:text-xl">Explore, express, and share your chaotic energy</p>
+          <p className="text-white/90 text-lg md:text-xl">Explore, express, and share your cha<button id="easter-egg">🥚</button>tic energy</p>
         </div>
 
         <div className="bg-white/10 backdrop-blur-md rounded-xl p-4 md:p-6 shadow-xl border border-white/20">
           <Tabs defaultValue="mood-ring" className="w-full">
             <TabsList className="grid grid-cols-3 mb-6">
               <TabsTrigger value="mood-ring" className="text-sm md:text-base">
-                🔮 Meme Mood Ring
+                🔮 Mood Ring
               </TabsTrigger>
               <TabsTrigger value="translator" className="text-sm md:text-base">
                 🗣️ Vibe Translator
@@ -46,7 +46,7 @@ export default function Home() {
         </div>
 
         <div className="text-center mt-6 text-white/70 text-sm">
-          <p>Tap anywhere for easter eggs ✨ | Share your vibe with the world</p>
+          <p>Find the easter egg to get a treat 😊✨ </p>
         </div>
       </div>
     </main>

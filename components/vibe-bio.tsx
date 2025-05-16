@@ -99,10 +99,10 @@ export function VibeBio() {
                 <Copy className="w-4 h-4 mr-2" />
                 {copied ? "Copied!" : "Copy Bio"}
               </Button>
-              <Button variant="outline" size="sm" className="bg-white/10 text-white">
+              {/* <Button variant="outline" size="sm" className="bg-white/10 text-white">
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
-              </Button>
+              </Button> */}
             </div>
           </Card>
         )}
