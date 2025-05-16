@@ -6,132 +6,31 @@ import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Copy, Share2, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { queryLLM  } from "@/lib/llmUtil"
 
-type BioMode = "dating" | "twitter" | "villain"
-
-const BIO_TRANSFORMERS: Record<BioMode, (bio: string) => string> = {
-  dating: (bio) => {
-    const phrases = [
-      "Will ghost you after 2 dates 💔",
-      "Fluent in sarcasm and red flags 🚩",
-      "Looking for someone to share my trauma with 🥰",
-      "I'm not like other people, I'm worse 💅",
-      "Emotionally unavailable but physically present 🙃",
-      "Recovering overthinker. Coding and coping.",
-      "My therapist warned you about me 🤷‍♀️",
-      "Swipe right if you enjoy chaos 🔥",
-    ]
-
-    // Extract keywords from bio
-    const keywords = bio.split(/\s+/).filter((word) => word.length > 4)
-    let result = ""
-
-    if (keywords.length > 0) {
-      // Use a keyword in the transformed bio
-      const keyword = keywords[Math.floor(Math.random() * keywords.length)]
-      result = `${keyword} enthusiast. `
-    }
-
-    // Add random phrases
-    const numPhrases = 1 + Math.floor(Math.random() * 2)
-    for (let i = 0; i < numPhrases; i++) {
-      const phrase = phrases[Math.floor(Math.random() * phrases.length)]
-      result += `${phrase} `
-    }
-
-    return result
-  },
-
-  twitter: (bio) => {
-    const twitterPhrases = [
-      "professional overthinker",
-      "chronically online",
-      "posting through it",
-      "terminally online",
-      "extremely normal person",
-      "shitposter extraordinaire",
-      "hot takes and cold brew",
-      "tweets are my own (nobody else wants them)",
-      "my mutuals are my family (i'm being held hostage)",
-      "ratio enthusiast",
-    ]
-
-    let result = ""
-
-    // Add random phrases and emojis
-    const numPhrases = 2 + Math.floor(Math.random() * 3)
-    for (let i = 0; i < numPhrases; i++) {
-      const phrase = twitterPhrases[Math.floor(Math.random() * twitterPhrases.length)]
-      result += `${phrase} | `
-    }
-
-    // Add random emojis
-    const emojis = ["✨", "🔥", "💀", "🤡", "🌈", "🧠", "👁️", "🫠", "🙃", "🤌"]
-    const numEmojis = 2 + Math.floor(Math.random() * 4)
-    for (let i = 0; i < numEmojis; i++) {
-      const emoji = emojis[Math.floor(Math.random() * emojis.length)]
-      result += emoji
-    }
-
-    return result
-  },
-
-  villain: (bio) => {
-    const villainPhrases = [
-      "plotting world domination since [YEAR]",
-      "your nightmares are my dreams",
-      "chaos is a ladder, and I'm climbing",
-      "the villain in everyone's story",
-      "my enemies list is also my contact list",
-      "professionally petty",
-      "living rent-free in your head",
-      "I don't get mad, I get even",
-      "the main character, but evil",
-    ]
-
-    // Extract year if present in bio
-    const yearMatch = bio.match(/\b(19|20)\d{2}\b/)
-    const year = yearMatch ? yearMatch[0] : "2000"
-
-    let result = ""
-
-    // Add villain intro
-    result += "Villain arc loading... 100% complete. "
-
-    // Add customized villain phrase
-    const phrase = villainPhrases[Math.floor(Math.random() * villainPhrases.length)]
-    result += phrase.replace("[YEAR]", year)
-
-    // Add evil emojis
-    const evilEmojis = ["😈", "🖤", "⚡", "🔪", "🥀", "🦇", "🕸️", "🧛", "☠️", "🌑"]
-    const numEmojis = 1 + Math.floor(Math.random() * 3)
-    result += " "
-    for (let i = 0; i < numEmojis; i++) {
-      const emoji = evilEmojis[Math.floor(Math.random() * evilEmojis.length)]
-      result += emoji
-    }
-
-    return result
-  },
-}
-
-const MODE_LABELS: Record<BioMode, { title: string; emoji: string }> = {
+const MODE_LABELS = {
   dating: { title: "Dating App Bio", emoji: "💘" },
   twitter: { title: "Sh*tposter Twitter Mode", emoji: "🐦" },
   villain: { title: "Villain Arc", emoji: "😈" },
-}
+} as const
+
+type BioMode = keyof typeof MODE_LABELS
 
 export function VibeBio() {
   const [inputBio, setInputBio] = useState("")
   const [selectedMode, setSelectedMode] = useState<BioMode>("dating")
   const [result, setResult] = useState("")
   const [copied, setCopied] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const handleTransform = () => {
+  const handleTransform = async () => {
     if (!inputBio.trim()) return
-
-    const transformedBio = BIO_TRANSFORMERS[selectedMode](inputBio)
-    setResult(transformedBio)
+    setLoading(true)
+    const systemInstruction = `You are a creative assistant that transforms bios based on selected modes: dating, twitter, or villain. Use the mode to rewrite the bio in a witty, chaotic, or darkly humorous way. just give me a single answer without any explanation and anyother unnecessary texts.`
+    const userPrompt = `Transform the following bio in '${selectedMode}' mode:\n\n${inputBio}`
+    const transformed = await queryLLM (systemInstruction, userPrompt)
+    setResult(transformed)
+    setLoading(false)
   }
 
   const handleCopy = () => {
@@ -144,7 +43,7 @@ export function VibeBio() {
     <div className="flex flex-col">
       <div className="text-center mb-6">
         <h2 className="text-xl font-bold text-white mb-2">Vibe My Bio</h2>
-        <p className="text-white/80">Transform your boring bio into something chaotic</p>
+        <p className="text-white/80">Transform your boring bio into something chaotic (powered by AI)</p>
       </div>
 
       <div className="space-y-4">
@@ -175,10 +74,10 @@ export function VibeBio() {
         <Button
           onClick={handleTransform}
           className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700"
-          disabled={!inputBio.trim()}
+          disabled={!inputBio.trim() || loading}
         >
           <Sparkles className="w-5 h-5 mr-2" />
-          Transform My Bio
+          {loading ? "Transforming..." : "Transform My Bio"}
         </Button>
 
         {result && (
@@ -188,7 +87,7 @@ export function VibeBio() {
               <h3 className="font-bold text-lg">{MODE_LABELS[selectedMode].title}</h3>
             </div>
 
-            <div className="bg-black/20 p-4 rounded-lg mb-4 text-lg">{result}</div>
+            <div className="bg-black/20 p-4 rounded-lg mb-4 text-lg whitespace-pre-wrap">{result}</div>
 
             <div className="flex gap-2 justify-center">
               <Button
