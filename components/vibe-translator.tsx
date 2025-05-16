@@ -6,9 +6,8 @@ import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Label } from "@/components/ui/label"
-import { Copy, Share2 } from "lucide-react"
+import { Copy } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { queryLLM } from "@/lib/llmUtil"
 
 type TranslationMode = "genz" | "meme" | "rizz" | "corporate"
 
@@ -20,10 +19,10 @@ const MODE_LABELS: Record<TranslationMode, string> = {
 }
 
 const MODE_INSTRUCTIONS: Record<TranslationMode, string> = {
-  genz: "Rewrite the following text in Gen Z speak, using slang, abbreviations, and emojis.just give me a single answer without any explanation and anyother unnecessary texts.",
-  meme: "Transform the following text into a meme format, using popular meme templates.just give me a single answer without any explanation and anyother unnecessary texts.",
-  rizz: "Add a flirty 'rizz' twist to the following text, with playful pickup lines.just give me a single answer without any explanation and anyother unnecessary texts.",
-  corporate: "Rewrite the following text as a corporate email with a darkly humorous or cursed tone.just give me a single answer without any explanation and anyother unnecessary texts.",
+  genz: "Rewrite the following text in Gen Z speak, using slang, abbreviations, and emojis. Just give a single answer without explanation or extra text.",
+  meme: "Transform the following text into a meme format, using popular meme templates. Just give a single answer without explanation or extra text.",
+  rizz: "Add a flirty 'rizz' twist to the following text, with playful pickup lines. Just give a single answer without explanation or extra text.",
+  corporate: "Rewrite the following text as a corporate email with a darkly humorous or cursed tone. Just give a single answer without explanation or extra text.",
 }
 
 export function VibeTranslator() {
@@ -35,16 +34,22 @@ export function VibeTranslator() {
 
   const handleTranslate = async () => {
     if (!inputText.trim()) return
-
     setLoading(true)
+
+    const systemInstruction = MODE_INSTRUCTIONS[mode]
+    const userPrompt = `Translate the following text in '${mode}' mode:\n\n${inputText}`
+
     try {
-      const systemInstruction = MODE_INSTRUCTIONS[mode]
-      const userPrompt = `Translate the following text in '${mode}' mode:\n\n${inputText}`
-      const translated = await queryLLM(systemInstruction, userPrompt)
-      setResult(translated)
+      const res = await fetch('/api/vibe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction, userPrompt }),
+      })
+      const data = await res.json()
+      setResult(data.text || '')
     } catch (error) {
       console.error(error)
-      setResult("Something went wrong while translating 😢")
+      setResult('An error occurred while translating your vibe.')
     } finally {
       setLoading(false)
     }
@@ -110,10 +115,6 @@ export function VibeTranslator() {
                 <Copy className="w-4 h-4 mr-2" />
                 {copied ? "Copied!" : "Copy"}
               </Button>
-              {/* <Button variant="outline" size="sm" className="bg-white/10 text-white">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button> */}
             </div>
           </Card>
         )}

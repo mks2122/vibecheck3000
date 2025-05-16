@@ -4,9 +4,8 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
-import { Copy, Share2, Sparkles } from "lucide-react"
+import { Copy, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
-import { queryLLM  } from "@/lib/llmUtil"
 
 const MODE_LABELS = {
   dating: { title: "Dating App Bio", emoji: "💘" },
@@ -26,11 +25,24 @@ export function VibeBio() {
   const handleTransform = async () => {
     if (!inputBio.trim()) return
     setLoading(true)
-    const systemInstruction = `You are a creative assistant that transforms bios based on selected modes: dating, twitter, or villain. Use the mode to rewrite the bio in a witty, chaotic, or darkly humorous way. just give me a single answer without any explanation and anyother unnecessary texts.`
+
+    const systemInstruction = `You are a creative assistant that transforms bios based on selected modes: dating, twitter, or villain. Use the mode to rewrite the bio in a witty, chaotic, or darkly humorous way. Just give a single answer without explanation or extra text.`
     const userPrompt = `Transform the following bio in '${selectedMode}' mode:\n\n${inputBio}`
-    const transformed = await queryLLM (systemInstruction, userPrompt)
-    setResult(transformed)
-    setLoading(false)
+
+    try {
+      const res = await fetch('/api/vibe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ systemInstruction, userPrompt }),
+      })
+      const data = await res.json()
+      setResult(data.text || '')
+    } catch (error) {
+      console.error(error)
+      setResult('An error occurred while transforming your bio.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const handleCopy = () => {
@@ -61,7 +73,9 @@ export function VibeBio() {
               variant={selectedMode === key ? "default" : "outline"}
               className={cn(
                 "border-white/30 text-white",
-                selectedMode === key ? "bg-gradient-to-r from-pink-500 to-purple-600" : "bg-white/10 hover:bg-white/20",
+                selectedMode === key
+                  ? "bg-gradient-to-r from-pink-500 to-purple-600"
+                  : "bg-white/10 hover:bg-white/20",
               )}
               onClick={() => setSelectedMode(key as BioMode)}
             >
@@ -99,10 +113,6 @@ export function VibeBio() {
                 <Copy className="w-4 h-4 mr-2" />
                 {copied ? "Copied!" : "Copy Bio"}
               </Button>
-              {/* <Button variant="outline" size="sm" className="bg-white/10 text-white">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button> */}
             </div>
           </Card>
         )}

@@ -1,6 +1,6 @@
 // utils/getMemeFromGiphy.ts
 export async function getMemeFromGiphy(searchQuery: string): Promise<string | null> {
-  const apiKey = process.env.GIPHY_API_KEY; // Store this in your .env file
+  const apiKey = process.env.NEXT_PUBLIC_GIPHY_API_KEY; // Store this in your .env file
   const limit = 25; // Fetch more results to have better random selection
 
   try {

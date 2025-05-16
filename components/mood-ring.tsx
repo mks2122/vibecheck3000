@@ -3,10 +3,9 @@
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Loader2, Download, Share2 } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import Image from "next/image"
 import { cn } from "@/lib/utils"
-import { queryLLM } from "@/lib/llmUtil"
 import { getMemeFromGiphy } from "@/lib/giphy"
 
 export function MoodRing() {
@@ -28,18 +27,26 @@ export function MoodRing() {
     // perform scan animation then fetch vibe and gif
     setTimeout(async () => {
       clearInterval(pulseInterval)
-      // 1. Generate vibe text via LLM
-      const systemInstruction = "You are a meme mood ring: generate a short,chaotic, playful, meme-style vibe description in one sentence."
-      const userPrompt = "Generate a random vibe description for a user aura scan."
+
+      // 1. Generate vibe text via proxied API
       let vibeText = ""
       try {
-        vibeText = await queryLLM(systemInstruction, userPrompt)
+        const vibRes = await fetch('/api/vibe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            systemInstruction: "You are a meme mood ring: generate a short, chaotic, playful, meme-style vibe description in one sentence.",
+            userPrompt: "Generate a random vibe description for a user aura scan."
+          })
+        })
+        const vibJson = await vibRes.json()
+        vibeText = vibJson.text || "You're radiating keyboard smash energy: asdkljfa 😵"
       } catch (e) {
         console.error(e)
         vibeText = "You're radiating keyboard smash energy: asdkljfa 😵"
       }
 
-      // 2. Fetch relevant GIF from Giphy
+      // 2. Fetch relevant GIF via proxied Giphy API
       let gifUrl = ""
       try {
         // use a keyword or entire text for search
@@ -89,14 +96,14 @@ export function MoodRing() {
   return (
     <div className="flex flex-col items-center justify-center">
       <div className="text-center mb-6">
-        <h2 className="text-xl font-bold text-white mb-2">Mood Ring</h2>
+        <h2 className="text-xl font-bold text-white mb-2">Meme Mood Ring</h2>
         <p className="text-white/80">Click to scan your chaotic aura</p>
       </div>
 
       {!result ? (
         <div className="relative w-64 h-64 flex items-center justify-center cursor-pointer mb-8" onClick={handleScan}>
           <div
-            className={cn("absolute rounded-full bg-purple-500/30 transition-all duration-500", scanning ? "" : "")}
+            className={cn("absolute rounded-full bg-purple-500/30 transition-all duration-500")}
             style={{ width: `${pulseSize}%`, height: `${pulseSize}%`, opacity: scanning ? 0.7 : 0.3 }}
           />
           <div className="absolute w-32 h-32 rounded-full bg-gradient-to-br from-purple-600 to-pink-500 flex items-center justify-center shadow-lg">
@@ -121,12 +128,6 @@ export function MoodRing() {
               <Button variant="secondary" size="sm" onClick={resetScan}>
                 Scan Again
               </Button>
-              {/* <Button variant="outline" size="sm" className="bg-white/10">
-                <Download className="w-4 h-4 mr-2" /> Save
-              </Button>
-              <Button variant="outline" size="sm" className="bg-white/10">
-                <Share2 className="w-4 h-4 mr-2" /> Share
-              </Button> */}
             </div>
           </div>
         </Card>
